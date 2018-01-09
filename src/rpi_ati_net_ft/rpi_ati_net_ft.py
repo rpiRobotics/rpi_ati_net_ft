@@ -36,7 +36,7 @@ from collections import namedtuple
 import struct
 import time
 
-NET_FT_device_settings=namedtuple('net_ft_settings', ['ft', 'conv', 'maxrange', 'bias', 'ipaddress', 'update_rate'], verbose=False)
+NET_FT_device_settings=namedtuple('net_ft_settings', ['ft', 'conv', 'maxrange', 'bias', 'ipaddress', 'rdt_rate'], verbose=False)
 
 class NET_FT(object):
     
@@ -79,6 +79,9 @@ class NET_FT(object):
         if soup.find('scfgtu').text != 'Nm':
             raise Exception('ATI Net F/T must use MKS units')
         
+        if soup.find('comrdte').text != "Enabled":
+            raise Exception('ATI Net F/T must have RDT enabled')
+        
         cfgcpf=float(soup.find('cfgcpf').text)
         cfgcpt=float(soup.find('cfgcpt').text)
         
@@ -90,9 +93,9 @@ class NET_FT(object):
         bias=np.divide(_to_array('setbias'), conv)
         ft=np.divide(_to_array('runft'), conv)
         ipaddress=soup.find('netip').text
-        update_rate=int(soup.find('setrate').text)
+        rdt_rate=int(soup.find('comrdtrate').text)
         
-        return NET_FT_device_settings(ft, conv, maxrange, bias, ipaddress, update_rate)
+        return NET_FT_device_settings(ft, conv, maxrange, bias, ipaddress, rdt_rate)
         
     def set_tare_from_ft(self):
         settings=self.read_device_settings()
@@ -106,7 +109,7 @@ class NET_FT(object):
         return settings.ft-self.tare
     
     def start_streaming(self):
-        sample_count=100000
+        sample_count=10*self.device_settings.rdt_rate
         dat=struct.pack('>HHI',0x1234, 0x0002, sample_count)
         self.socket.sendto(dat, (self.host, 49152))
         self._streaming=True

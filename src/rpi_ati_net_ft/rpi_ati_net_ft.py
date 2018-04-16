@@ -70,10 +70,7 @@ class NET_FT(object):
         soup=self._read_netftapi2()
         
         device_status = int(soup.find('runstat').text,16)
-        
-        if device_status != 0:
-            raise Exception('ATI Net F/T returning error status code: ' + str(device_status))
-        
+                
         if soup.find('scfgfu').text != 'N':
             raise Exception('ATI Net F/T must use MKS units')
         
@@ -107,7 +104,17 @@ class NET_FT(object):
         
     def read_ft_http(self):
         settings=self.read_device_settings()
+        if settings.device_status != 0:
+            raise Exception('ATI Net F/T returning error status code: ' + str(settings.device_status))
+        
         return settings.ft-self.tare
+    
+    def try_read_ft_http(self):
+        try:
+            settings=self.read_device_settings()        
+            return settings.ft-self.tare, settings.status
+        except:
+            return None, 0x80000000
     
     def start_streaming(self):
         sample_count=10*self.device_settings.rdt_rate
@@ -122,7 +129,7 @@ class NET_FT(object):
         self._streaming=False
         self._last_streaming_command_time=time.time()
     
-    def read_ft_streaming(self, timeout=0):
+    def try_read_ft_streaming(self, timeout=0):
         
         #Re-up the streaming if running out of packets
         if (time.time() - self._last_streaming_command_time) > 5:
@@ -143,26 +150,33 @@ class NET_FT(object):
             try:
                 (buf, addr)=s.recvfrom(1024)
             except:            
-                return False, None
+                return False, None, 0
             
             if (drop_count > 100):
                 break
         
             timeout1=0
-            drop_count+=1
-            
+            drop_count+=1            
             
         if (buf is None):
-            return False, None
+            return False, None, 0
         
         rdt_sequence, ft_sequence, status, Fx, Fy, Fz, Tx, Ty, Tz \
             =struct.unpack('>IIIiiiiii', buf)
-            
+                
+        ft=np.divide(np.asarray([Fx, Fy, Fz, Tx, Ty, Tz]), self.device_settings.conv)-self.tare
+                
+        return True, ft, status
+        
+    def read_ft_streaming(self, timeout=0):
+        
+        ret, ft, status = self.try_read_ft_streaming(timeout)
+        if not ret:
+            return False, None
+        
         if (status != 0):
             raise Exception('ATI Net F/T returning error status code: ' + str(status))
         
-        ft=np.divide(np.asarray([Fx, Fy, Fz, Tx, Ty, Tz]), self.device_settings.conv)-self.tare
-                
         return True, ft
         
     def __del__(self):

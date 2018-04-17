@@ -37,7 +37,7 @@ from collections import namedtuple
 import struct
 import time
 
-NET_FT_device_settings=namedtuple('net_ft_settings', ['ft', 'conv', 'maxrange', 'bias', 'ipaddress', 'rdt_rate'], verbose=False)
+NET_FT_device_settings=namedtuple('net_ft_settings', ['ft', 'conv', 'maxrange', 'bias', 'ipaddress', 'rdt_rate', 'device_status'], verbose=False)
 
 class NET_FT(object):
     
@@ -93,7 +93,7 @@ class NET_FT(object):
         ipaddress=soup.find('netip').text
         rdt_rate=int(soup.find('comrdtrate').text)
         
-        return NET_FT_device_settings(ft, conv, maxrange, bias, ipaddress, rdt_rate)
+        return NET_FT_device_settings(ft, conv, maxrange, bias, ipaddress, rdt_rate, device_status)
         
     def set_tare_from_ft(self):
         settings=self.read_device_settings()
@@ -112,7 +112,7 @@ class NET_FT(object):
     def try_read_ft_http(self):
         try:
             settings=self.read_device_settings()        
-            return settings.ft-self.tare, settings.status
+            return settings.ft-self.tare, settings.device_status
         except:
             return None, 0x80000000
     

@@ -86,10 +86,11 @@ class NET_FT(object):
         def _to_array(s):
             return np.fromstring(soup.find(s).text, dtype=np.float64, sep=';' )
         
-        conv=np.asarray([cfgcpf, cfgcpf, cfgcpf, cfgcpt, cfgcpt, cfgcpt], dtype=np.float64)
+        conv=np.asarray([cfgcpt, cfgcpt, cfgcpt, cfgcpf, cfgcpf, cfgcpf], dtype=np.float64)
         maxrange=_to_array('cfgmr')
         bias=np.divide(_to_array('setbias'), conv)
-        ft=np.divide(_to_array('runft'), conv)
+        ft1=_to_array('runft')
+        ft=np.divide(np.append(ft1[3:6],ft1[0:3]), conv)
         ipaddress=soup.find('netip').text
         rdt_rate=int(soup.find('comrdtrate').text)
         
@@ -164,7 +165,7 @@ class NET_FT(object):
         rdt_sequence, ft_sequence, status, Fx, Fy, Fz, Tx, Ty, Tz \
             =struct.unpack('>IIIiiiiii', buf)
                 
-        ft=np.divide(np.asarray([Fx, Fy, Fz, Tx, Ty, Tz]), self.device_settings.conv)-self.tare
+        ft=np.divide(np.asarray([Tx, Ty, Tz, Fx, Fy, Fz]), self.device_settings.conv)-self.tare
                 
         return True, ft, status
         

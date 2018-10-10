@@ -1,0 +1,9 @@
+<launch>
+  <arg name="netft_host" default="192.168.1.1"/>
+  <arg name="publish_rate" default="50"/>
+  <node name="ati_net_ft_driver" pkg="rpi_ati_net_ft" type="ati_net_ft_driver_ros" required="true">
+    <param name="netft_host" value="$(arg netft_host)"/>
+    <param name="publish_rate" value="$(arg publish_rate)" type="int"/>
+  </node>
+</launch>
+

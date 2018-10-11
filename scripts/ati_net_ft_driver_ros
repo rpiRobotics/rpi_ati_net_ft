@@ -38,7 +38,7 @@ def main():
     rospy.init_node("ati_net_ft_driver")
     
     netft_host=rospy.get_param("~netft_host")
-    publish_rate=rospy.get_param("~publish_rate", 50)
+    publish_frequency=rospy.get_param("~publish_frequency", 50)
     
     
     ft_sensor = rpi_ati_net_ft.NET_FT(netft_host)
@@ -46,7 +46,7 @@ def main():
     ft_sensor.start_streaming()
     ft_wrench_pub = rospy.Publisher("ft_wrench", WrenchStamped, queue_size=10)
     
-    rate = rospy.Rate(publish_rate)
+    rate = rospy.Rate(publish_frequency)
     
     while not rospy.is_shutdown():
         

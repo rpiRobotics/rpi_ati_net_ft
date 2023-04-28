@@ -31,13 +31,13 @@ from __future__ import absolute_import
 import socket
 import select
 import requests
-from BeautifulSoup import BeautifulSoup
+from bs4 import BeautifulSoup
 import numpy as np
 from collections import namedtuple
 import struct
 import time
 
-NET_FT_device_settings=namedtuple('net_ft_settings', ['ft', 'conv', 'maxrange', 'bias', 'ipaddress', 'rdt_rate', 'device_status'], verbose=False)
+NET_FT_device_settings=namedtuple('net_ft_settings', ['ft', 'conv', 'maxrange', 'bias', 'ipaddress', 'rdt_rate', 'device_status'])
 
 class NET_FT(object):
     
@@ -74,7 +74,7 @@ class NET_FT(object):
         if soup.find('scfgfu').text != 'N':
             raise Exception('ATI Net F/T must use MKS units')
         
-        if soup.find('scfgtu').text != 'Nm':
+        if soup.find('scfgtu').text != 'N-m' and soup.find('scfgtu').text !='Nm':
             raise Exception('ATI Net F/T must use MKS units')
         
         if soup.find('comrdte').text != "Enabled":
